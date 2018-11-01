@@ -82,3 +82,15 @@ data "template_file" "userdata" {
     kubelet_extra_args  = "${lookup(var.worker_groups[count.index], "kubelet_extra_args", local.workers_group_defaults["kubelet_extra_args"])}"
   }
 }
+
+data "aws_iam_role" "cluster_role" {
+  count = "${var.cluster_role_name != "" ? 1 : 0}"
+
+  name = "${var.cluster_role_name}"
+}
+
+data "aws_iam_role" "worker_role" {
+  count = "${var.worker_role_name != "" ? 1 : 0}"
+
+  name = "${var.worker_role_name}"
+}

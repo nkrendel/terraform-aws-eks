@@ -28,6 +28,8 @@ module "eks" {
   subnets               = ["subnet-abcde012", "subnet-bcde012a"]
   tags                  = {Environment = "test"}
   vpc_id                = "vpc-abcde012"
+  cluster_role_name     = "pre-existing-cluster-role"
+  worker_role_name      = "pre-existing-worker-role"
 }
 ```
 
@@ -106,6 +108,7 @@ MIT Licensed. See [LICENSE](https://github.com/terraform-aws-modules/terraform-a
 | cluster_name | Name of the EKS cluster. Also used as a prefix in names of related resources. | string | - | yes |
 | cluster_security_group_id | If provided, the EKS cluster will be attached to this security group. If not given, a security group will be created with necessary ingres/egress to work with the workers and provide API access to your current IP/32. | string | `` | no |
 | cluster_version | Kubernetes version to use for the EKS cluster. | string | `1.10` | no |
+| cluster_role_name | Name of a pre-existing IAM role to use for the EKS cluster. | string | - | no |
 | config_output_path | Where to save the Kubectl config file (if `write_kubeconfig = true`). Should end in a forward slash `/` . | string | `./` | no |
 | kubeconfig_aws_authenticator_additional_args | Any additional arguments to pass to the authenticator such as the role to assume. e.g. ["-r", "MyEksRole"]. | list | `<list>` | no |
 | kubeconfig_aws_authenticator_command | Command to use to to fetch AWS EKS credentials. | string | `aws-iam-authenticator` | no |
@@ -121,6 +124,7 @@ MIT Licensed. See [LICENSE](https://github.com/terraform-aws-modules/terraform-a
 | worker_additional_security_group_ids | A list of additional security group ids to attach to worker instances | list | `<list>` | no |
 | worker_group_count | The number of maps contained within the worker_groups list. | string | `1` | no |
 | worker_groups | A list of maps defining worker group configurations. See workers_group_defaults for valid keys. | list | `<list>` | no |
+| worker_role_name | Name of a pre-existing IAM role to use for the EKS worker nodes. | string | - | no |
 | worker_security_group_id | If provided, all workers will be attached to this security group. If not given, a security group will be created with necessary ingres/egress to work with the EKS cluster. | string | `` | no |
 | worker_sg_ingress_from_port | Minimum port number from which pods will accept communication. Must be changed to a lower value if some pods in your cluster will expose a port lower than 1025 (e.g. 22, 80, or 443). | string | `1025` | no |
 | workers_group_defaults | Override default values for target groups. See workers_group_defaults_defaults in locals.tf for valid keys. | map | `<map>` | no |
