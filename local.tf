@@ -6,8 +6,12 @@ locals {
   cluster_security_group_id = "${coalesce(join("", aws_security_group.cluster.*.id), var.cluster_security_group_id)}"
 
   worker_security_group_id = "${coalesce(join("", aws_security_group.workers.*.id), var.worker_security_group_id)}"
-  default_iam_role_id      = "${element(concat(aws_iam_role.workers.*.id, list("")), 0)}"
   kubeconfig_name          = "${var.kubeconfig_name == "" ? "eks_${var.cluster_name}" : var.kubeconfig_name}"
+  cluster_role_name        = "${element(concat(aws_iam_role.cluster.*.name, list(var.cluster_role_name)), 0)}"
+  cluster_role_arn         = "${element(concat(aws_iam_role.cluster.*.arn, data.aws_iam_role.cluster_role.*.arn), 0)}"
+  worker_role_name         = "${element(concat(aws_iam_role.workers.*.name, list(var.worker_role_name)), 0)}"
+  worker_role_arn          = "${element(concat(aws_iam_role.workers.*.arn, data.aws_iam_role.worker_role.*.arn), 0)}"
+  default_iam_role_id      = "${element(concat(aws_iam_role.workers.*.id, data.aws_iam_role.worker_role.*.id), 0)}"
 
   workers_group_defaults_defaults = {
     name                          = "count.index"                   # Name of the worker group. Literal count.index will never be used but if name is not set, the count.index interpolation will be used.
