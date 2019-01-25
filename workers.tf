@@ -1,8 +1,11 @@
+# Worker Groups using Launch Configurations
+
 resource "aws_autoscaling_group" "workers" {
   name_prefix           = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups[count.index], "name", count.index)}"
   desired_capacity      = "${lookup(var.worker_groups[count.index], "asg_desired_capacity", local.workers_group_defaults["asg_desired_capacity"])}"
   max_size              = "${lookup(var.worker_groups[count.index], "asg_max_size", local.workers_group_defaults["asg_max_size"])}"
   min_size              = "${lookup(var.worker_groups[count.index], "asg_min_size", local.workers_group_defaults["asg_min_size"])}"
+  force_delete          = "${lookup(var.worker_groups[count.index], "asg_force_delete", local.workers_group_defaults["asg_force_delete"])}"
   target_group_arns     = ["${compact(split(",", coalesce(lookup(var.worker_groups[count.index], "target_group_arns", ""), local.workers_group_defaults["target_group_arns"])))}"]
   launch_configuration  = "${element(aws_launch_configuration.workers.*.id, count.index)}"
   vpc_zone_identifier   = ["${split(",", coalesce(lookup(var.worker_groups[count.index], "subnets", ""), local.workers_group_defaults["subnets"]))}"]
@@ -20,6 +23,8 @@ resource "aws_autoscaling_group" "workers" {
   }"]
 
   lifecycle {
+    create_before_destroy = true
+
     ignore_changes = ["desired_capacity"]
   }
 }
@@ -55,7 +60,7 @@ resource "aws_security_group" "workers" {
   name_prefix = "${aws_eks_cluster.this.name}"
   description = "Security group for all nodes in the cluster."
   vpc_id      = "${var.vpc_id}"
-  count       = "${var.worker_security_group_id == "" ? 1 : 0}"
+  count       = "${var.worker_create_security_group ? 1 : 0}"
   tags        = "${merge(var.tags, map("Name", "${aws_eks_cluster.this.name}-eks_worker_sg", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "owned"
   ))}"
 }
@@ -68,7 +73,7 @@ resource "aws_security_group_rule" "workers_egress_internet" {
   from_port         = 0
   to_port           = 0
   type              = "egress"
-  count             = "${var.worker_security_group_id == "" ? 1 : 0}"
+  count             = "${var.worker_create_security_group ? 1 : 0}"
 }
 
 resource "aws_security_group_rule" "workers_ingress_self" {
@@ -79,7 +84,7 @@ resource "aws_security_group_rule" "workers_ingress_self" {
   from_port                = 0
   to_port                  = 65535
   type                     = "ingress"
-  count                    = "${var.worker_security_group_id == "" ? 1 : 0}"
+  count                    = "${var.worker_create_security_group ? 1 : 0}"
 }
 
 resource "aws_security_group_rule" "workers_ingress_cluster" {
@@ -90,7 +95,7 @@ resource "aws_security_group_rule" "workers_ingress_cluster" {
   from_port                = "${var.worker_sg_ingress_from_port}"
   to_port                  = 65535
   type                     = "ingress"
-  count                    = "${var.worker_security_group_id == "" ? 1 : 0}"
+  count                    = "${var.worker_create_security_group ? 1 : 0}"
 }
 
 resource "aws_security_group_rule" "workers_ingress_cluster_https" {
@@ -101,14 +106,15 @@ resource "aws_security_group_rule" "workers_ingress_cluster_https" {
   from_port                = 443
   to_port                  = 443
   type                     = "ingress"
-  count                    = "${var.worker_security_group_id == "" ? 1 : 0}"
+  count                    = "${var.worker_create_security_group ? 1 : 0}"
 }
 
 resource "aws_iam_role" "workers" {
-  count = "${var.worker_role_name == "" ? 1 : 0}"
+  count                 = "${var.worker_role_name == "" ? 1 : 0}"
 
-  name_prefix        = "${aws_eks_cluster.this.name}"
-  assume_role_policy = "${data.aws_iam_policy_document.workers_assume_role_policy.json}"
+  name_prefix           = "${aws_eks_cluster.this.name}"
+  assume_role_policy    = "${data.aws_iam_policy_document.workers_assume_role_policy.json}"
+  force_detach_policies = true
 }
 
 resource "aws_iam_instance_profile" "workers" {
@@ -163,7 +169,6 @@ data "aws_iam_policy_document" "worker_autoscaling" {
       "autoscaling:DescribeAutoScalingInstances",
       "autoscaling:DescribeLaunchConfigurations",
       "autoscaling:DescribeTags",
-      "autoscaling:GetAsgForInstance",
     ]
 
     resources = ["*"]
