@@ -150,54 +150,42 @@ resource "null_resource" "tags_as_list_of_maps" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "workers_autoscaling" {
-  policy_arn = "${aws_iam_policy.worker_autoscaling.arn}"
+resource "aws_iam_role_policy" "workers_autoscaling" {
+  name       = "worker-autoscaling"
   role       = "${local.worker_role_name}"
-}
 
-resource "aws_iam_policy" "worker_autoscaling" {
-  name_prefix = "eks-worker-autoscaling-${aws_eks_cluster.this.name}"
-  description = "EKS worker node autoscaling policy for cluster ${aws_eks_cluster.this.name}"
-  policy      = "${data.aws_iam_policy_document.worker_autoscaling.json}"
-}
-
-data "aws_iam_policy_document" "worker_autoscaling" {
-  statement {
-    sid    = "eksWorkerAutoscalingAll"
-    effect = "Allow"
-
-    actions = [
-      "autoscaling:DescribeAutoScalingGroups",
-      "autoscaling:DescribeAutoScalingInstances",
-      "autoscaling:DescribeLaunchConfigurations",
-      "autoscaling:DescribeTags",
-    ]
-
-    resources = ["*"]
-  }
-
-  statement {
-    sid    = "eksWorkerAutoscalingOwn"
-    effect = "Allow"
-
-    actions = [
-      "autoscaling:SetDesiredCapacity",
-      "autoscaling:TerminateInstanceInAutoScalingGroup",
-      "autoscaling:UpdateAutoScalingGroup",
-    ]
-
-    resources = ["*"]
-
-    condition {
-      test     = "StringEquals"
-      variable = "autoscaling:ResourceTag/kubernetes.io/cluster/${aws_eks_cluster.this.name}"
-      values   = ["owned"]
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "eksWorkerAutoscalingAll",
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:DescribeAutoScalingGroups",
+        "autoscaling:DescribeAutoScalingInstances",
+        "autoscaling:DescribeLaunchConfigurations",
+        "autoscaling:DescribeTags"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "eksWorkerAutoscalingOwn",
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:SetDesiredCapacity",
+        "autoscaling:TerminateInstanceInAutoScalingGroup",
+        "autoscaling:UpdateAutoScalingGroup"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "autoscaling:ResourceTag/kubernetes.io/cluster/${aws_eks_cluster.this.name}": ["owned"],
+          "autoscaling:ResourceTag/k8s.io/cluster-autoscaler/enabled": ["true"]
+        }
+      }
     }
-
-    condition {
-      test     = "StringEquals"
-      variable = "autoscaling:ResourceTag/k8s.io/cluster-autoscaler/enabled"
-      values   = ["true"]
-    }
-  }
+  ]
+}
+EOF
 }
