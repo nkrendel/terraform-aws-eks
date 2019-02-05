@@ -40,6 +40,7 @@ locals {
     iam_role_id                   = "${local.default_iam_role_id}"  # Use the specified IAM role if set.
     suspended_processes           = ""                              # A comma delimited string of processes to to suspend. i.e. AZRebalance,HealthCheck,ReplaceUnhealthy
     target_group_arns             = ""                              # A comma delimited list of ALB target group ARNs to be associated to the ASG
+    enabled_metrics               = ""                              # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
   }
 
   workers_group_defaults = "${merge(local.workers_group_defaults_defaults, var.workers_group_defaults)}"
@@ -79,6 +80,7 @@ locals {
     iam_role_id                              = "${local.default_iam_role_id}"                # Use the specified IAM role if set.
     suspended_processes                      = ""                                            # A comma delimited string of processes to to suspend. i.e. AZRebalance,HealthCheck,ReplaceUnhealthy
     target_group_arns                        = ""                                            # A comma delimited list of ALB target group ARNs to be associated to the ASG
+    enabled_metrics                          = ""                                            # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
   }
 
   workers_group_launch_template_defaults = "${merge(local.workers_group_launch_template_defaults_defaults, var.workers_group_launch_template_defaults)}"
@@ -119,6 +121,7 @@ locals {
     "f1.16xlarge"  = true
     "g2.2xlarge"   = true
     "g2.8xlarge"   = false
+    "g3s.xlarge"   = true
     "g3.4xlarge"   = true
     "g3.8xlarge"   = true
     "g3.16xlarge"  = true

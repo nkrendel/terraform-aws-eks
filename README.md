@@ -126,7 +126,7 @@ MIT Licensed. See [LICENSE](https://github.com/terraform-aws-modules/terraform-a
 | kubeconfig\_aws\_authenticator\_env\_variables | Environment variables that should be used when executing the authenticator. e.g. { AWS_PROFILE = "eks"}. | map | `{}` | no |
 | kubeconfig\_name | Override the default name used for items kubeconfig. | string | `""` | no |
 | local\_exec\_interpreter | Command to run for local-exec resources. Must be a shell-style interpreter. If you are on Windows Git Bash is a good choice. | list | `[ "/bin/sh", "-c" ]` | no |
-| manage\_aws\_auth | Whether to write and apply the aws-auth configmap file. | string | `"true"` | no |
+| manage\_aws\_auth | Whether to apply the aws-auth configmap file. | string | `"true"` | no |
 | map\_accounts | Additional AWS account numbers to add to the aws-auth configmap. See examples/eks_test_fixture/variables.tf for example format. | list | `[]` | no |
 | map\_accounts\_count | The count of accounts in the map_accounts list. | string | `"0"` | no |
 | map\_roles | Additional IAM roles to add to the aws-auth configmap. See examples/eks_test_fixture/variables.tf for example format. | list | `[]` | no |
@@ -140,6 +140,8 @@ MIT Licensed. See [LICENSE](https://github.com/terraform-aws-modules/terraform-a
 | worker\_create\_security\_group | Whether to create a security group for the workers or attach the workers to `worker_security_group_id`. | string | `"true"` | no |
 | worker\_group\_count | The number of maps contained within the worker_groups list. | string | `"1"` | no |
 | worker\_group\_launch\_template\_count | The number of maps contained within the worker_groups_launch_template list. | string | `"0"` | no |
+| worker\_group\_launch\_template\_tags | A map defining extra tags to be applied to the worker group template ASG. | map | `<map>` | no |
+| worker\_group\_tags | A map defining extra tags to be applied to the worker group ASG. | map | `<map>` | no |
 | worker\_groups | A list of maps defining worker group configurations to be defined using AWS Launch Configurations. See workers_group_defaults for valid keys. | list | `[ { "name": "default" } ]` | no |
 | worker\_groups\_launch\_template | A list of maps defining worker group configurations to be defined using AWS Launch Templates. See workers_group_defaults for valid keys. | list | `[ { "name": "default" } ]` | no |
 | worker_role_name | Name of a pre-existing IAM role to use for the EKS worker nodes. | string | - | no |
@@ -147,6 +149,7 @@ MIT Licensed. See [LICENSE](https://github.com/terraform-aws-modules/terraform-a
 | worker\_sg\_ingress\_from\_port | Minimum port number from which pods will accept communication. Must be changed to a lower value if some pods in your cluster will expose a port lower than 1025 (e.g. 22, 80, or 443). | string | `"1025"` | no |
 | workers\_group\_defaults | Override default values for target groups. See workers_group_defaults_defaults in locals.tf for valid keys. | map | `{}` | no |
 | workers\_group\_launch\_template\_defaults | Override default values for target groups. See workers_group_defaults_defaults in locals.tf for valid keys. | map | `{}` | no |
+| write\_aws\_auth\_config | Whether to write the aws-auth configmap file. | string | `"true"` | no |
 | write\_kubeconfig | Whether to write a Kubectl config file containing the cluster configuration. Saved to `config_output_path`. | string | `"true"` | no |
 
 ## Outputs
